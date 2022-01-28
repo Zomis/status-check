@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+    <head>
+
+    </head>
+    <body>
+        <div id="app">
+            <div v-for="v in checks" class="check">
+                {{ v }}
+            </div>
+        </div>
+        <script src="https://unpkg.com/vue@3.2.29"></script>
+        <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+        <script>
+            const StatusCheck = {
+                data() {
+                    return {
+                        checks: [
+                            {
+                                url: "https://duga.zomis.net/tasks",
+                                status: null
+                            },
+                            {
+                                ws: "wss://games.zomis.net:42638/websocket",
+                                status: null
+                            },
+                            {
+                                ws: "wss://play.minesweeperflags.net:8081/websocket",
+                                status: null
+                            }
+                        ]
+                    }
+                },
+                mounted() {
+                    for (let v of this.checks) {
+                        if (v.ws) {
+                            let ws = new WebSocket(v.ws);
+                            ws.onerror = e => console.error(e);
+                            ws.onopen = e => {
+                                v.status = true
+                                console.log(e);
+                            };
+                            ws.onmessage = e => console.log(e);
+                            ws.onclose = e => console.log(e);
+                        } else if (v.url) {
+                            axios.get(v.url).then(e => {
+                                v.status = true
+                                console.log(e);
+                            }).catch(e => {
+                                v.status = false
+                                console.error(e);
+                            })
+                        } else {
+                            errors.add(v)
+                        }
+                    }
+                }
+            }
+
+            Vue.createApp(StatusCheck).mount('#app')
+        </script>
+    </body>
+</html>
